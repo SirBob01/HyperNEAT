@@ -212,8 +212,10 @@ namespace HyperNEAT {
                         edge.to = _pointset[point];
                     }
 
-                    // Assign edge to weight
-                    connections[edge] = child->weight * _params.weight_range;
+                    // Assign edge to weight if "to" is not an input node
+                    if(_nodes[edge.to].type != NodeType::Input) {
+                        connections[edge] = child->weight * _params.weight_range;
+                    }
                 }
             }
         }
