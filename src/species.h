@@ -16,7 +16,7 @@ namespace HyperNEAT {
         double _fitness_sum;
         std::queue<double> _fitness_history;
 
-    public:
+      public:
         // Network parameters are going to propagated to all genomes
         Specie(Genome *representative, NEATParameters params);
         ~Specie();
@@ -66,6 +66,6 @@ namespace HyperNEAT {
          */
         bool can_progress();
     };
-}
+} // namespace HyperNEAT
 
 #endif

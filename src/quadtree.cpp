@@ -12,62 +12,65 @@ namespace HyperNEAT {
     }
 
     Quadtree::~Quadtree() {
-        for(auto &child: children) {
+        for (auto &child : children) {
             delete child;
         }
     }
 
     void Quadtree::generate_children() {
-        children.push_back(new Quadtree({
-            center.x - size/2, 
-            center.y - size/2}, size/2, level+1));
-        children.push_back(new Quadtree({
-            center.x + size/2, 
-            center.y - size/2}, size/2, level+1));
-        children.push_back(new Quadtree({
-            center.x - size/2, 
-            center.y + size/2}, size/2, level+1));
-        children.push_back(new Quadtree({
-            center.x + size/2, 
-            center.y + size/2}, size/2, level+1));
+        children.push_back(
+            new Quadtree({center.x - size / 2, center.y - size / 2},
+                         size / 2,
+                         level + 1));
+        children.push_back(
+            new Quadtree({center.x + size / 2, center.y - size / 2},
+                         size / 2,
+                         level + 1));
+        children.push_back(
+            new Quadtree({center.x - size / 2, center.y + size / 2},
+                         size / 2,
+                         level + 1));
+        children.push_back(
+            new Quadtree({center.x + size / 2, center.y + size / 2},
+                         size / 2,
+                         level + 1));
     }
 
     double Quadtree::get_variance() {
         std::vector<double> weights;
-        for(auto &child : children) {
+        for (auto &child : children) {
             recur_weights(child, weights);
         }
         return variance(weights);
     }
 
     void Quadtree::recur_weights(Quadtree *root, std::vector<double> &weights) {
-        if((root->children).size()) {
-            for(auto child : root->children) {
+        if ((root->children).size()) {
+            for (auto child : root->children) {
                 recur_weights(child, weights);
             }
-        }
-        else {
+        } else {
             weights.push_back(root->weight);
         }
     }
 
     double variance(std::vector<double> &values) {
         int n = values.size();
-        if(n == 0) {
+        if (n == 0) {
             return 0;
         }
 
         double mean = 0;
-        for(auto &v : values) {
+        for (auto &v : values) {
             mean += v;
         }
         mean /= n;
 
         double var = 0;
-        for(auto &v : values) {
+        for (auto &v : values) {
             double d = v - mean;
             var += d * d;
         }
         return var / n;
     }
-}
+} // namespace HyperNEAT

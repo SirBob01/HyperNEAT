@@ -14,7 +14,7 @@ namespace HyperNEAT {
     struct PointHash {
         std::size_t operator()(Point const &s) const noexcept;
     };
-    
+
     struct Quadtree {
         Point center;
         double size;
@@ -24,10 +24,8 @@ namespace HyperNEAT {
 
         std::vector<Quadtree *> children;
 
-        Quadtree(Point center, double size, int level) 
-            : center(center), 
-              size(size), 
-              level(level) {};
+        Quadtree(Point center, double size, int level) :
+            center(center), size(size), level(level){};
         ~Quadtree();
 
         /**
@@ -40,7 +38,7 @@ namespace HyperNEAT {
          */
         double get_variance();
 
-    private:
+      private:
         /**
          * Recursively grab the weights of all leaf nodes
          */
@@ -48,6 +46,6 @@ namespace HyperNEAT {
     };
 
     double variance(std::vector<double> &values);
-}
+} // namespace HyperNEAT
 
 #endif

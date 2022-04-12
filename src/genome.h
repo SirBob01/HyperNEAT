@@ -1,11 +1,11 @@
 #ifndef HYPER_NEAT_GENOME_H_
 #define HYPER_NEAT_GENOME_H_
 
-#include <vector>
+#include <cassert>
+#include <iostream>
 #include <unordered_map>
 #include <unordered_set>
-#include <iostream>
-#include <cassert>
+#include <vector>
 
 #include "activations.h"
 #include "hyperparams.h"
@@ -13,11 +13,7 @@
 #include "random.h"
 
 namespace HyperNEAT {
-    enum NodeType {
-        Input,
-        Hidden,
-        Output
-    };
+    enum NodeType { Input, Hidden, Output };
 
     struct Edge {
         int from;
@@ -38,7 +34,7 @@ namespace HyperNEAT {
     struct NodeGene {
         double bias;
         activation_t function;
-        
+
         double activation = 0;
     };
 
@@ -53,17 +49,18 @@ namespace HyperNEAT {
 
         int _inputs;
         int _outputs;
-        
+
         double _fitness;
         double _adjusted_fitness;
-        
+
         /**
          * Topologically sort the nodes for feed-forward evaluation
          */
         void topological_sort(int node, std::unordered_set<int> &visited);
-        
+
         /**
-         * Update the internal graph structure of the neural network for evaluation
+         * Update the internal graph structure of the neural network for
+         * evaluation
          */
         void update_structure();
 
@@ -73,7 +70,7 @@ namespace HyperNEAT {
         void add_node(Edge edge);
 
         /**
-         * Add a new edge between two unconnected nodes, and update 
+         * Add a new edge between two unconnected nodes, and update
          * the global innovation database
          */
         bool add_edge(Edge edge);
@@ -92,7 +89,7 @@ namespace HyperNEAT {
          * Set the weight of an edge to a new random value
          */
         bool reset_weight(Edge edge);
-        
+
         /**
          * Shift the bias of a node
          */
@@ -111,9 +108,7 @@ namespace HyperNEAT {
         /**
          * Test if the node id is an input
          */
-        inline bool is_input(int node) {
-            return node < _inputs;
-        }
+        inline bool is_input(int node) { return node < _inputs; }
 
         /**
          * Test if the node id is an output
@@ -121,22 +116,23 @@ namespace HyperNEAT {
         inline bool is_output(int node) {
             return node >= _inputs && node < _inputs + _outputs;
         }
-        
-    public:
+
+      public:
         /**
-         * A genome represents the Compositional Pattern-Producing Network (CPPN)
-         * used to generate the phenotype Artificial Neural Network (ANN).
-         * 
+         * A genome represents the Compositional Pattern-Producing Network
+         * (CPPN) used to generate the phenotype Artificial Neural Network
+         * (ANN).
+         *
          * The ANN is an 2-dimensional substrate, whose points correspond
-         * to neurons. The weight between two neurons are determined by feeding their
-         * coordinates to the evolved CPPN.
-         * 
+         * to neurons. The weight between two neurons are determined by feeding
+         * their coordinates to the evolved CPPN.
+         *
          * To calculate the bias at a point, feed only one point to the CPPN and
          * zero-out the rest, e.g., f(x1, y1, 0, 0).
          */
         Genome(GenomeParameters params);
-        Genome(std::vector<NodeGene> &nodes, 
-               std::unordered_map<Edge, EdgeGene, EdgeHash> &edges, 
+        Genome(std::vector<NodeGene> &nodes,
+               std::unordered_map<Edge, EdgeGene, EdgeHash> &edges,
                GenomeParameters params);
         Genome(const Genome &genome);
         Genome &operator=(const Genome &genome);
@@ -181,6 +177,6 @@ namespace HyperNEAT {
          */
         void set_adjusted_fitness(double fitness);
     };
-}
+} // namespace HyperNEAT
 
 #endif

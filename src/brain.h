@@ -2,15 +2,15 @@
 #define HYPER_NEAT_BRAIN_H_
 
 #include <algorithm>
-#include <vector>
+#include <cassert>
+#include <cstring>
 #include <deque>
 #include <fstream>
-#include <cstring>
-#include <cassert>
+#include <vector>
 
-#include "species.h"
 #include "activations.h"
 #include "phenome.h"
+#include "species.h"
 
 namespace HyperNEAT {
     class Brain {
@@ -59,7 +59,8 @@ namespace HyperNEAT {
         void repopulate();
 
         /**
-         * Randomly select a specie whose likelihoods depend on adjusted fitness sum
+         * Randomly select a specie whose likelihoods depend on adjusted fitness
+         * sum
          */
         Specie *sample_specie();
 
@@ -73,8 +74,10 @@ namespace HyperNEAT {
          */
         void write_genome(std::ofstream &outfile, Genome *genome);
 
-    public:
-        Brain(std::vector<Point> inputs, std::vector<Point> outputs, NEATParameters params);
+      public:
+        Brain(std::vector<Point> inputs,
+              std::vector<Point> outputs,
+              NEATParameters params);
         Brain(std::string filename, NEATParameters params);
         ~Brain();
 
@@ -118,6 +121,6 @@ namespace HyperNEAT {
          */
         void save(std::string filename);
     };
-}
+} // namespace HyperNEAT
 
 #endif

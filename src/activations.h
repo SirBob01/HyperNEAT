@@ -1,9 +1,9 @@
 #ifndef HYPER_NEAT_ACTIVATIONS_H_
 #define HYPER_NEAT_ACTIVATIONS_H_
 
+#include <cmath>
 #include <string>
 #include <unordered_map>
-#include <cmath>
 
 namespace HyperNEAT {
     using activation_t = double (*)(double x);
@@ -13,17 +13,11 @@ namespace HyperNEAT {
         return std::max(x, slope * x);
     }
 
-    inline double sigmoid(double x) {
-        return 1.0/(1.0+std::exp(-x));
-    }
+    inline double sigmoid(double x) { return 1.0 / (1.0 + std::exp(-x)); }
 
-    inline double tanh(double x) {
-        return 2.0 * sigmoid(2 * x) - 1.0;
-    }
+    inline double tanh(double x) { return 2.0 * sigmoid(2 * x) - 1.0; }
 
-    inline double gaussian(double x) {
-        return std::exp(-0.5 * x * x);
-    }
+    inline double gaussian(double x) { return std::exp(-0.5 * x * x); }
 
     // Taken from https://arxiv.org/abs/2006.08195
     inline double zihaue_periodic(double x) {
@@ -31,9 +25,7 @@ namespace HyperNEAT {
         return x + z * z;
     }
 
-    inline double identity(double x) {
-        return x;
-    }
+    inline double identity(double x) { return x; }
 
     const std::unordered_map<std::string, activation_t> activations = {
         {"abs", std::fabs},
@@ -44,6 +36,6 @@ namespace HyperNEAT {
         {"identity", identity},
         {"lrelu", lrelu},
     };
-}
+} // namespace HyperNEAT
 
 #endif

@@ -1,9 +1,7 @@
 #include "random.h"
 
 namespace HyperNEAT {
-    double random() {
-        return uniform(rng);
-    }
+    double random() { return uniform(rng); }
 
     void randseed() {
         rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
@@ -12,4 +10,4 @@ namespace HyperNEAT {
     int randrange(int start, int stop) {
         return random() * (stop - start) + start;
     }
-}
+} // namespace HyperNEAT

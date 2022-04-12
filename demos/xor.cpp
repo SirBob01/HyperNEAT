@@ -1,5 +1,5 @@
-#include <vector>
 #include "../src/brain.h"
+#include <vector>
 
 struct Case {
     std::vector<double> input;
@@ -8,7 +8,7 @@ struct Case {
 
 int main() {
     HyperNEAT::randseed();
-    
+
     const int max_generations = 200;
     const std::vector<Case> cases = {
         {{0, 0}, {0}},
@@ -16,12 +16,8 @@ int main() {
         {{1, 0}, {1}},
         {{0, 1}, {1}},
     };
-    const std::vector<HyperNEAT::Point> input = {
-        {-0.5, -0.5}, {0.5, -0.5}
-    };
-    const std::vector<HyperNEAT::Point> output = {
-        {0, 0.5}
-    };
+    const std::vector<HyperNEAT::Point> input = {{-0.5, -0.5}, {0.5, -0.5}};
+    const std::vector<HyperNEAT::Point> output = {{0, 0.5}};
 
     HyperNEAT::NEATParameters params;
     params.phenome_params.output_activation = HyperNEAT::sigmoid;
@@ -30,15 +26,15 @@ int main() {
     params.phenome_params.initial_depth = 1;
     params.phenome_params.maximum_depth = 2;
     HyperNEAT::Brain brain(input, output, params);
-    
-    for(int i = 0; i < max_generations; i++) {
+
+    for (int i = 0; i < max_generations; i++) {
         std::cout << "Generation " << brain.get_generations() << "\n";
 
         // Calculate the fitness of each network
         auto phenomes = brain.get_phenomes();
-        for(auto phenome : phenomes) {
+        for (auto phenome : phenomes) {
             double total_error = 0.0;
-            for(auto &c : cases) {
+            for (auto &c : cases) {
                 double result = phenome->forward(c.input)[0];
                 double diff = c.output[0] - result;
                 total_error += diff * diff;
@@ -49,11 +45,12 @@ int main() {
         // Print the result of the fittest phenome
         auto phenome = brain.get_fittest();
         double total_error = 0.0;
-        for(auto &c : cases) {
+        for (auto &c : cases) {
             double result = phenome.forward(c.input)[0];
             double diff = c.output[0] - result;
             total_error += diff * diff;
-            std::cout << c.input[0] << " ^ " << c.input[1] << " = " << result << "\n"; 
+            std::cout << c.input[0] << " ^ " << c.input[1] << " = " << result
+                      << "\n";
         }
         std::cout << "Accuracy " << 1 / (1 + std::sqrt(total_error)) << "\n\n";
 

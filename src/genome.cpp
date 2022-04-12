@@ -21,17 +21,18 @@ namespace HyperNEAT {
 
         // Initialize the CPPN with minimal topology
         // Weights are random and biases are zero-initialized
-        for(int i = 0; i < _inputs; i++) {
-            auto random_it = std::next(std::begin(activations), randrange(0, activations.size()));
+        for (int i = 0; i < _inputs; i++) {
+            auto random_it = std::next(std::begin(activations),
+                                       randrange(0, activations.size()));
             _nodes.push_back({0, random_it->second});
         }
-        for(int i = 0; i < _outputs; i++) {
+        for (int i = 0; i < _outputs; i++) {
             _nodes.push_back({0, tanh});
         }
-        
+
         // Connect all inputs to all outputs
-        for(int i = 0; i < _inputs; i++) {
-            for(int j = _inputs; j < _inputs + _outputs; j++) {
+        for (int i = 0; i < _inputs; i++) {
+            for (int j = _inputs; j < _inputs + _outputs; j++) {
                 add_edge({i, j});
             }
         }
@@ -40,8 +41,8 @@ namespace HyperNEAT {
         update_structure();
     }
 
-    Genome::Genome(std::vector<NodeGene> &nodes, 
-                   std::unordered_map<Edge, EdgeGene, EdgeHash> &edges, 
+    Genome::Genome(std::vector<NodeGene> &nodes,
+                   std::unordered_map<Edge, EdgeGene, EdgeHash> &edges,
                    GenomeParameters params) {
         _inputs = 4;
         _outputs = 1;
@@ -60,11 +61,11 @@ namespace HyperNEAT {
     Genome::Genome(const Genome &genome) {
         _inputs = genome._inputs;
         _outputs = genome._outputs;
-        
+
         _params = genome._params;
         _fitness = genome._fitness;
         _adjusted_fitness = genome._adjusted_fitness;
-        
+
         _nodes = genome._nodes;
         _edges = genome._edges;
 
@@ -75,25 +76,25 @@ namespace HyperNEAT {
     Genome &Genome::operator=(const Genome &genome) {
         _inputs = genome._inputs;
         _outputs = genome._outputs;
-        
+
         _params = genome._params;
         _fitness = genome._fitness;
         _adjusted_fitness = genome._adjusted_fitness;
-        
+
         _nodes = genome._nodes;
         _edges = genome._edges;
-        
+
         _adjacency = genome._adjacency;
         _sorted = genome._sorted;
         return *this;
     }
-    
+
     void Genome::topological_sort(int node, std::unordered_set<int> &visited) {
-        if(visited.count(node)) {
+        if (visited.count(node)) {
             return;
         }
-        
-        for(int &adj : _adjacency[node]) {
+
+        for (int &adj : _adjacency[node]) {
             topological_sort(adj, visited);
         }
 
@@ -105,7 +106,7 @@ namespace HyperNEAT {
         // Update the adjacency list
         _adjacency.clear();
         _adjacency.resize(_nodes.size());
-        for(auto &p : _edges) {
+        for (auto &p : _edges) {
             Edge e = p.first;
             _adjacency[e.to].push_back(e.from);
         }
@@ -114,7 +115,7 @@ namespace HyperNEAT {
         int n = _nodes.size();
         _sorted.clear();
         std::unordered_set<int> visited;
-        for(int i = 0; i < n; i++) {
+        for (int i = 0; i < n; i++) {
             topological_sort(i, visited);
         }
     }
@@ -125,12 +126,13 @@ namespace HyperNEAT {
         _edges[{edge.from, new_node}] = {1.0, true};
         _edges[{new_node, edge.to}] = {_edges[edge].weight, true};
 
-        auto random_it = std::next(std::begin(activations), randrange(0, activations.size()));
+        auto random_it = std::next(std::begin(activations),
+                                   randrange(0, activations.size()));
         _nodes.push_back({0, random_it->second});
     }
 
     bool Genome::add_edge(Edge edge) {
-        if(_edges.count(edge)) {
+        if (_edges.count(edge)) {
             return false;
         }
         _edges[edge] = {random() * 2.0 - 1.0, true};
@@ -140,17 +142,18 @@ namespace HyperNEAT {
     void Genome::toggle_enable(Edge edge) {
         _edges[edge].enabled = !_edges[edge].enabled;
     }
-    
+
     bool Genome::shift_weight(Edge edge) {
-        if(!_edges[edge].enabled) {
+        if (!_edges[edge].enabled) {
             return false;
         }
-        _edges[edge].weight += ((1.0 - random()) * _params.mutation_power * 2) - _params.mutation_power;
+        _edges[edge].weight += ((1.0 - random()) * _params.mutation_power * 2) -
+                               _params.mutation_power;
         return true;
     }
 
     bool Genome::reset_weight(Edge edge) {
-        if(!_edges[edge].enabled) {
+        if (!_edges[edge].enabled) {
             return false;
         }
 
@@ -159,7 +162,8 @@ namespace HyperNEAT {
     }
 
     void Genome::shift_bias(int node) {
-        _nodes[node].bias += ((1.0 - random()) * _params.mutation_power * 2) - _params.mutation_power;
+        _nodes[node].bias += ((1.0 - random()) * _params.mutation_power * 2) -
+                             _params.mutation_power;
     }
 
     void Genome::reset_bias(int node) {
@@ -167,7 +171,8 @@ namespace HyperNEAT {
     }
 
     void Genome::change_activation(int node) {
-        auto random_it = std::next(std::begin(activations), randrange(0, activations.size()));
+        auto random_it = std::next(std::begin(activations),
+                                   randrange(0, activations.size()));
         _nodes[node].function = random_it->second;
     }
 
@@ -179,12 +184,12 @@ namespace HyperNEAT {
         _nodes[3].activation = p1.y;
 
         // Forward propagation
-        for(int i = _inputs; i < _sorted.size(); i++) {
+        for (int i = _inputs; i < _sorted.size(); i++) {
             int to = _sorted[i];
             double sum = 0.0;
-            for(int from : _adjacency[to]) {
+            for (int from : _adjacency[to]) {
                 EdgeGene gene = _edges[{from, to}];
-                if(gene.enabled) {
+                if (gene.enabled) {
                     sum += gene.weight * _nodes[from].activation;
                 }
             }
@@ -198,93 +203,88 @@ namespace HyperNEAT {
         do {
             error = false;
             double r = random();
-            
+
             double cum_prob = 0;
-            if(r <= cum_prob + _params.m_weight_shift) {
-                auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
+            if (r <= cum_prob + _params.m_weight_shift) {
+                auto random_edge =
+                    std::next(std::begin(_edges), randrange(0, _edges.size()));
                 error = !shift_weight(random_edge->first);
             }
             cum_prob += _params.m_weight_shift;
-            
-            if(r > cum_prob && r <= cum_prob + _params.m_weight_change) {
-                auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
+
+            if (r > cum_prob && r <= cum_prob + _params.m_weight_change) {
+                auto random_edge =
+                    std::next(std::begin(_edges), randrange(0, _edges.size()));
                 error = !reset_weight(random_edge->first);
             }
             cum_prob += _params.m_weight_change;
 
-            if(r > cum_prob && r <= cum_prob + _params.m_bias_shift) {
+            if (r > cum_prob && r <= cum_prob + _params.m_bias_shift) {
                 int random_node = randrange(_inputs, _nodes.size());
                 shift_bias(random_node);
             }
             cum_prob += _params.m_bias_shift;
 
-            if(r > cum_prob && r <= cum_prob + _params.m_bias_change) {
+            if (r > cum_prob && r <= cum_prob + _params.m_bias_change) {
                 int random_node = randrange(_inputs, _nodes.size());
                 reset_bias(random_node);
             }
             cum_prob += _params.m_bias_change;
 
-            if(r > cum_prob && r <= cum_prob + _params.m_node) {
-                auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
+            if (r > cum_prob && r <= cum_prob + _params.m_node) {
+                auto random_edge =
+                    std::next(std::begin(_edges), randrange(0, _edges.size()));
                 add_node(random_edge->first);
             }
             cum_prob += _params.m_node;
-            
-            if(r > cum_prob && r <= cum_prob + _params.m_edge) {
+
+            if (r > cum_prob && r <= cum_prob + _params.m_edge) {
                 // Generate random nodes (i, j) such that:
                 // 1. i is not an output
                 // 2. j is not an input
                 // 3. i < j in the topological sort
                 int n = _nodes.size();
-                int i = randrange(0, n-_outputs);
-                int j = randrange(std::max(_inputs, i+1), n);
+                int i = randrange(0, n - _outputs);
+                int j = randrange(std::max(_inputs, i + 1), n);
                 error = !add_edge({_sorted[i], _sorted[j]});
             }
             cum_prob += _params.m_edge;
 
-            if(r > cum_prob && r <= cum_prob + _params.m_toggle_enable) {
-                auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
+            if (r > cum_prob && r <= cum_prob + _params.m_toggle_enable) {
+                auto random_edge =
+                    std::next(std::begin(_edges), randrange(0, _edges.size()));
                 toggle_enable(random_edge->first);
             }
             cum_prob += _params.m_toggle_enable;
 
-            if(r > cum_prob && r <= cum_prob + _params.m_activation) {
+            if (r > cum_prob && r <= cum_prob + _params.m_activation) {
                 int random_node = randrange(_inputs + _outputs, _nodes.size());
-                if(random_node >= _nodes.size()) {
+                if (random_node >= _nodes.size()) {
                     error = true;
-                }
-                else {
+                } else {
                     change_activation(random_node);
                 }
             }
             cum_prob += _params.m_activation;
             assert(cum_prob == 1);
-        } while(error);
+        } while (error);
 
         update_structure();
     }
 
-    const std::vector<NodeGene> &Genome::get_nodes() {
-        return _nodes;
-    }
+    const std::vector<NodeGene> &Genome::get_nodes() { return _nodes; }
 
     const std::unordered_map<Edge, EdgeGene, EdgeHash> &Genome::get_edges() {
         return _edges;
     }
 
-    double Genome::get_fitness() {
-        return _fitness;
-    }
+    double Genome::get_fitness() { return _fitness; }
 
-    void Genome::set_fitness(double fitness) {
-        _fitness = fitness;
-    }
-    
-    double Genome::get_adjusted_fitness() {
-        return _adjusted_fitness;
-    }
+    void Genome::set_fitness(double fitness) { _fitness = fitness; }
+
+    double Genome::get_adjusted_fitness() { return _adjusted_fitness; }
 
     void Genome::set_adjusted_fitness(double fitness) {
         _adjusted_fitness = fitness;
     }
-}
+} // namespace HyperNEAT
