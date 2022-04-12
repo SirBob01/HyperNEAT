@@ -8,8 +8,15 @@ The HyperNEAT algorithm uses evolution to train neural networks. Genome neural n
 
 Through the process of Darwinian natural selection, the genomes will eventually converge towards creating a network that can maximize the fitness function and solve the task.
 
+## Build
+
+To build the demo executables
+
+1. Create a build folder and go to it `mkdir build && cd build`
+2. Run `cmake .. && make -j 3`
+
 ## License
 
-Code and documentation Copyright (c) 2021 Keith Leonardo
+Code and documentation Copyright (c) 2022 Keith Leonardo
 
 Code released under the [MIT License](https://choosealicense.com/licenses/mit/).
