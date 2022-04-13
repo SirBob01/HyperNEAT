@@ -27,15 +27,14 @@ namespace HyperNEAT {
 
     inline double identity(double x) { return x; }
 
-    const std::unordered_map<std::string, activation_t> activations = {
-        {"abs", std::fabs},
-        {"tanh", tanh},
-        {"sigmoid", sigmoid},
-        {"gaussian", gaussian},
-        {"sin", std::sin},
-        {"identity", identity},
-        {"lrelu", lrelu},
-    };
+    /**
+     * A mapping of known activation functions
+     *
+     * If using a custom activation function, create an entry in this hashtable
+     * before generating any genomes so the algorithm can save the state of the
+     * neural network
+     */
+    extern std::unordered_map<std::string, activation_t> activations;
 } // namespace HyperNEAT
 
 #endif
