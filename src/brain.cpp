@@ -75,9 +75,6 @@ namespace HyperNEAT {
 
     Brain::~Brain() {
         for (auto &specie : _species) {
-            for (auto &genome : specie->get_members()) {
-                delete genome;
-            }
             delete specie;
         }
         for (auto &elite : _elites) {
