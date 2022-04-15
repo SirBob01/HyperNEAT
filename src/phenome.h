@@ -18,6 +18,9 @@ namespace HyperNEAT {
         double activation = 0;
     };
 
+    /**
+     * The neural network to be evaulated. This is defined by the genome CPPN.
+     */
     class Phenome {
         Genome &_genome;
         PhenomeParameters _params;
@@ -93,9 +96,6 @@ namespace HyperNEAT {
         bool active_output();
 
       public:
-        /**
-         * A phenome is defined by the genome CPPN
-         */
         Phenome(Genome &genome,
                 std::vector<Point> &inputs,
                 std::vector<Point> &outputs,

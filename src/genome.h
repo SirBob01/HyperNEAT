@@ -13,8 +13,14 @@
 #include "random.h"
 
 namespace HyperNEAT {
+    /**
+     * The classifications of neural network nodes
+     */
     enum NodeType { Input, Hidden, Output };
 
+    /**
+     * An edge in the genome network
+     */
     struct Edge {
         int from;
         int to;
@@ -22,15 +28,26 @@ namespace HyperNEAT {
         bool operator==(const Edge &other) const;
     };
 
+    /**
+     * Hash function for edges
+     */
     struct EdgeHash {
         std::size_t operator()(Edge const &s) const noexcept;
     };
 
+    /**
+     * Information associated with an edge that can be inherited by
+     * children during reproduction
+     */
     struct EdgeGene {
         double weight;
         bool enabled;
     };
 
+    /**
+     * Information associated with a node that can be inherited by
+     * children during reproduction
+     */
     struct NodeGene {
         double bias;
         activation_t function;
@@ -38,6 +55,18 @@ namespace HyperNEAT {
         double activation = 0;
     };
 
+    /**
+     * A genome represents the Compositional Pattern-Producing Network
+     * (CPPN) used to generate the phenotype Artificial Neural Network
+     * (ANN).
+     *
+     * The ANN is an 2-dimensional substrate, whose points correspond
+     * to neurons. The weight between two neurons are determined by feeding
+     * their coordinates to the evolved CPPN.
+     *
+     * To calculate the bias at a point, feed only one point to the CPPN and
+     * zero-out the rest, e.g., f(x1, y1, 0, 0).
+     */
     class Genome {
         std::unordered_map<Edge, EdgeGene, EdgeHash> _edges;
         std::vector<NodeGene> _nodes;
@@ -118,18 +147,6 @@ namespace HyperNEAT {
         }
 
       public:
-        /**
-         * A genome represents the Compositional Pattern-Producing Network
-         * (CPPN) used to generate the phenotype Artificial Neural Network
-         * (ANN).
-         *
-         * The ANN is an 2-dimensional substrate, whose points correspond
-         * to neurons. The weight between two neurons are determined by feeding
-         * their coordinates to the evolved CPPN.
-         *
-         * To calculate the bias at a point, feed only one point to the CPPN and
-         * zero-out the rest, e.g., f(x1, y1, 0, 0).
-         */
         Genome(GenomeParameters params);
         Genome(std::vector<NodeGene> &nodes,
                std::unordered_map<Edge, EdgeGene, EdgeHash> &edges,

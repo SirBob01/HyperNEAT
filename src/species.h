@@ -8,6 +8,11 @@
 #include "hyperparams.h"
 
 namespace HyperNEAT {
+    /**
+     * A container for genomes of similar topology and weights.
+     * These groups are evaluated independently to protect variation in the gene
+     * pool
+     */
     class Specie {
         std::vector<Genome *> _members;
         NEATParameters _params;

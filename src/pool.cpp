@@ -1,9 +1,9 @@
-#include "brain.h"
+#include "pool.h"
 
 namespace HyperNEAT {
-    Brain::Brain(std::vector<Point> inputs,
-                 std::vector<Point> outputs,
-                 NEATParameters params) {
+    Pool::Pool(std::vector<Point> inputs,
+               std::vector<Point> outputs,
+               NEATParameters params) {
         _inputs = inputs;
         _outputs = outputs;
         _params = params;
@@ -22,7 +22,7 @@ namespace HyperNEAT {
         _global_best = new Genome(*(_species[0]->sample()));
     }
 
-    Brain::Brain(std::string filename, NEATParameters params) {
+    Pool::Pool(std::string filename, NEATParameters params) {
         _params = params;
         std::ifstream infile;
         infile.open(filename, std::ios::binary | std::ios::in);
@@ -73,7 +73,7 @@ namespace HyperNEAT {
         generate_phenomes();
     }
 
-    Brain::~Brain() {
+    Pool::~Pool() {
         for (auto &specie : _species) {
             delete specie;
         }
@@ -89,7 +89,7 @@ namespace HyperNEAT {
         delete _global_best;
     }
 
-    double Brain::distance(Genome &a, Genome &b) {
+    double Pool::distance(Genome &a, Genome &b) {
         std::unordered_map<Edge, EdgeGene, EdgeHash> a_edges = a.get_edges();
         std::unordered_map<Edge, EdgeGene, EdgeHash> b_edges = b.get_edges();
 
@@ -124,7 +124,7 @@ namespace HyperNEAT {
         return t1 * _params.c1 + t2 * _params.c2;
     }
 
-    Genome *Brain::crossover(Genome &a, Genome &b) {
+    Genome *Pool::crossover(Genome &a, Genome &b) {
         auto a_edges = a.get_edges();
         auto b_edges = b.get_edges();
 
@@ -195,7 +195,7 @@ namespace HyperNEAT {
         return new Genome(child_nodes, child_edges, _params.genome_params);
     }
 
-    void Brain::add_genome(Genome *genome) {
+    void Pool::add_genome(Genome *genome) {
         // Test if the new genome fits in an existing specie
         for (auto &specie : _species) {
             Genome &repr = specie->get_repr();
@@ -209,7 +209,7 @@ namespace HyperNEAT {
         _species.push_back(new Specie(genome, _params));
     }
 
-    void Brain::generate_phenomes() {
+    void Pool::generate_phenomes() {
         for (auto &phenome : _phenomes) {
             delete phenome;
         }
@@ -224,7 +224,7 @@ namespace HyperNEAT {
         }
     }
 
-    void Brain::cull() {
+    void Pool::cull() {
         std::vector<Specie *> survivors;
         // Treat the elites as its own species
         for (auto &specie : _species) {
@@ -266,7 +266,7 @@ namespace HyperNEAT {
         _species = survivors;
     }
 
-    void Brain::repopulate() {
+    void Pool::repopulate() {
         int size = 0;
         for (auto &specie : _species) {
             size += (specie->get_members()).size();
@@ -331,7 +331,7 @@ namespace HyperNEAT {
         }
     }
 
-    Specie *Brain::sample_specie() {
+    Specie *Pool::sample_specie() {
         double r = random();
         double total = 0;
         for (auto &specie : _species) {
@@ -357,7 +357,7 @@ namespace HyperNEAT {
         return nullptr;
     }
 
-    Genome *Brain::read_genome(std::ifstream &infile) {
+    Genome *Pool::read_genome(std::ifstream &infile) {
         std::unordered_map<Edge, EdgeGene, EdgeHash> edges;
         std::vector<NodeGene> nodes;
 
@@ -402,7 +402,7 @@ namespace HyperNEAT {
         return genome;
     }
 
-    void Brain::write_genome(std::ofstream &outfile, Genome *genome) {
+    void Pool::write_genome(std::ofstream &outfile, Genome *genome) {
         auto edges = genome->get_edges();
         auto nodes = genome->get_nodes();
 
@@ -440,9 +440,9 @@ namespace HyperNEAT {
         }
     }
 
-    std::vector<Phenome *> &Brain::get_phenomes() { return _phenomes; }
+    std::vector<Phenome *> &Pool::get_phenomes() { return _phenomes; }
 
-    void Brain::evolve() {
+    void Pool::evolve() {
         cull();
         repopulate();
         generate_phenomes();
@@ -459,16 +459,16 @@ namespace HyperNEAT {
         _generations++;
     }
 
-    int Brain::get_generations() { return _generations; }
+    int Pool::get_generations() { return _generations; }
 
-    Phenome Brain::get_fittest() {
+    Phenome Pool::get_fittest() {
         return Phenome(*_global_best,
                        _inputs,
                        _outputs,
                        _params.phenome_params);
     }
 
-    Phenome Brain::get_current_fittest() {
+    Phenome Pool::get_current_fittest() {
         Genome *genome = _species[0]->get_best();
         for (auto &specie : _species) {
             Genome *candidate = specie->get_best();
@@ -479,7 +479,7 @@ namespace HyperNEAT {
         return Phenome(*genome, _inputs, _outputs, _params.phenome_params);
     }
 
-    std::vector<Phenome> Brain::get_hall_of_fame() {
+    std::vector<Phenome> Pool::get_hall_of_fame() {
         std::vector<Phenome> phenomes;
         for (auto &genome : _hall_of_fame) {
             phenomes.push_back(
@@ -488,7 +488,7 @@ namespace HyperNEAT {
         return phenomes;
     }
 
-    std::vector<Phenome> Brain::get_elites() {
+    std::vector<Phenome> Pool::get_elites() {
         std::vector<Phenome> phenomes;
         for (auto &genome : _elites) {
             phenomes.push_back(
@@ -497,7 +497,7 @@ namespace HyperNEAT {
         return phenomes;
     }
 
-    void Brain::save(std::string filename) {
+    void Pool::save(std::string filename) {
         std::ofstream outfile;
         outfile.open(filename, std::ios::binary | std::ios::out);
 

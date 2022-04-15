@@ -1,5 +1,5 @@
-#ifndef HYPER_NEAT_BRAIN_H_
-#define HYPER_NEAT_BRAIN_H_
+#ifndef HYPER_NEAT_POOL_H_
+#define HYPER_NEAT_POOL_H_
 
 #include <algorithm>
 #include <cassert>
@@ -13,7 +13,13 @@
 #include "species.h"
 
 namespace HyperNEAT {
-    class Brain {
+    /**
+     * Container for all genome networks.
+     *
+     * It evaluates genomes and selects the best ones to repopulate,
+     * evolving the pool over time.
+     */
+    class Pool {
         std::vector<Specie *> _species;
         std::vector<Phenome *> _phenomes;
 
@@ -75,11 +81,11 @@ namespace HyperNEAT {
         void write_genome(std::ofstream &outfile, Genome *genome);
 
       public:
-        Brain(std::vector<Point> inputs,
-              std::vector<Point> outputs,
-              NEATParameters params);
-        Brain(std::string filename, NEATParameters params);
-        ~Brain();
+        Pool(std::vector<Point> inputs,
+             std::vector<Point> outputs,
+             NEATParameters params);
+        Pool(std::string filename, NEATParameters params);
+        ~Pool();
 
         /**
          * Get the list of phenomes for training

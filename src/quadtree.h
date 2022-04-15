@@ -4,6 +4,9 @@
 #include <vector>
 
 namespace HyperNEAT {
+    /**
+     * A 2-dimensional point on the substrate
+     */
     struct Point {
         double x;
         double y;
@@ -11,10 +14,16 @@ namespace HyperNEAT {
         bool operator==(const Point &other) const;
     };
 
+    /**
+     * Hash function for points
+     */
     struct PointHash {
         std::size_t operator()(Point const &s) const noexcept;
     };
 
+    /**
+     * Recursively divides a space into quadrants
+     */
     struct Quadtree {
         Point center;
         double size;

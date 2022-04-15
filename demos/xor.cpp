@@ -1,4 +1,4 @@
-#include "../src/brain.h"
+#include <HyperNEAT.h>
 #include <vector>
 
 struct Case {
@@ -25,13 +25,13 @@ int main() {
     params.phenome_params.band_threshold = 0.1;
     params.phenome_params.initial_depth = 1;
     params.phenome_params.maximum_depth = 2;
-    HyperNEAT::Brain brain(input, output, params);
+    HyperNEAT::Pool pool(input, output, params);
 
     for (int i = 0; i < max_generations; i++) {
-        std::cout << "Generation " << brain.get_generations() << "\n";
+        std::cout << "Generation " << pool.get_generations() << "\n";
 
         // Calculate the fitness of each network
-        auto phenomes = brain.get_phenomes();
+        auto phenomes = pool.get_phenomes();
         for (auto phenome : phenomes) {
             double total_error = 0.0;
             for (auto &c : cases) {
@@ -43,7 +43,7 @@ int main() {
         }
 
         // Print the result of the fittest phenome
-        auto phenome = brain.get_fittest();
+        auto phenome = pool.get_fittest();
         double total_error = 0.0;
         for (auto &c : cases) {
             double result = phenome.forward(c.input)[0];
@@ -54,8 +54,8 @@ int main() {
         }
         std::cout << "Accuracy " << 1 / (1 + std::sqrt(total_error)) << "\n\n";
 
-        // Evolve the brain
-        brain.evolve();
+        // Evolve the pool
+        pool.evolve();
     }
     return 0;
 }
