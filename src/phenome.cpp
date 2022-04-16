@@ -30,9 +30,8 @@ namespace HyperNEAT {
 
         // Input to hidden
         for (auto &input : _inputs) {
-            Quadtree *root = division_initialization(input, true);
-            prune_extract(input, root, true, conn1);
-            delete root;
+            std::unique_ptr<Quadtree> root = divide_initialize(input, true);
+            prune_extract(input, *root, true, conn1);
             for (auto &e : conn1) {
                 hidden_nodes.insert(e.first.to);
             }
@@ -49,9 +48,9 @@ namespace HyperNEAT {
                         break;
                     }
                 }
-                Quadtree *root = division_initialization(hidden, true);
-                prune_extract(hidden, root, true, conn2);
-                delete root;
+                std::unique_ptr<Quadtree> root =
+                    divide_initialize(hidden, true);
+                prune_extract(hidden, *root, true, conn2);
                 for (auto &e : conn2) {
                     hidden_nodes.insert(e.first.to);
                 }
@@ -67,9 +66,8 @@ namespace HyperNEAT {
 
         // Hidden to output
         for (auto &output : _outputs) {
-            Quadtree *root = division_initialization(output, false);
-            prune_extract(output, root, false, conn3);
-            delete root;
+            std::unique_ptr<Quadtree> root = divide_initialize(output, false);
+            prune_extract(output, *root, false, conn3);
         }
 
         // Combine the connection collections
@@ -143,16 +141,17 @@ namespace HyperNEAT {
         }
     }
 
-    Quadtree *Phenome::division_initialization(Point point, bool outgoing) {
-        Quadtree *root = new Quadtree({0, 0}, 1, 1);
-        std::queue<Quadtree *> q;
-        q.push(root);
+    std::unique_ptr<Quadtree> Phenome::divide_initialize(Point point,
+                                                         bool outgoing) {
+        std::unique_ptr<Quadtree> root = std::make_unique<Quadtree>(1, 1);
+        std::queue<std::reference_wrapper<Quadtree>> q;
+        q.push(*root);
 
         while (q.size()) {
-            Quadtree *current = q.front();
+            Quadtree &current = q.front();
             q.pop();
-            current->generate_children();
-            for (auto &child : current->children) {
+            current.generate_children();
+            for (auto &child : current.children) {
                 if (outgoing) {
                     child->weight = calculate_weight(point, child->center);
                 } else {
@@ -160,11 +159,11 @@ namespace HyperNEAT {
                 }
             }
 
-            if (current->level < _params.initial_depth ||
-                (current->level < _params.maximum_depth &&
-                 current->get_variance() > _params.division_threshold)) {
-                for (auto &child : current->children) {
-                    q.push(child);
+            if (current.level < _params.initial_depth ||
+                (current.level < _params.maximum_depth &&
+                 current.get_variance() > _params.division_threshold)) {
+                for (auto &child : current.children) {
+                    q.push(*child);
                 }
             }
         }
@@ -173,7 +172,7 @@ namespace HyperNEAT {
 
     void Phenome::prune_extract(
         Point point,
-        Quadtree *Quadtree,
+        Quadtree &quadtree,
         bool outgoing,
         std::unordered_map<Edge, double, EdgeHash> &connections) {
         if (_pointset.count(point) == 0) {
@@ -188,10 +187,10 @@ namespace HyperNEAT {
         double d_bottom;
         double d_left;
         double d_right;
-        for (auto &child : Quadtree->children) {
+        for (auto &child : quadtree.children) {
             Point &center = child->center;
             if (child->get_variance() > _params.variance_threshold) {
-                prune_extract(point, child, outgoing, connections);
+                prune_extract(point, *child, outgoing, connections);
             } else {
                 if (outgoing) {
                     d_left = std::fabs(

@@ -11,46 +11,34 @@ namespace HyperNEAT {
         return h1 ^ (h2 << 1);
     }
 
-    Quadtree::~Quadtree() {
-        for (auto &child : children) {
-            delete child;
-        }
-    }
-
     void Quadtree::generate_children() {
-        children.push_back(
-            new Quadtree({center.x - size / 2, center.y - size / 2},
-                         size / 2,
-                         level + 1));
-        children.push_back(
-            new Quadtree({center.x + size / 2, center.y - size / 2},
-                         size / 2,
-                         level + 1));
-        children.push_back(
-            new Quadtree({center.x - size / 2, center.y + size / 2},
-                         size / 2,
-                         level + 1));
-        children.push_back(
-            new Quadtree({center.x + size / 2, center.y + size / 2},
-                         size / 2,
-                         level + 1));
+        Point quadrant_centers[4] = {
+            {center.x - size / 2, center.y - size / 2},
+            {center.x + size / 2, center.y - size / 2},
+            {center.x - size / 2, center.y + size / 2},
+            {center.x + size / 2, center.y + size / 2},
+        };
+        for (auto &center : quadrant_centers) {
+            children.push_back(
+                std::make_unique<Quadtree>(center, size / 2, level + 1));
+        }
     }
 
     double Quadtree::get_variance() {
         std::vector<double> weights;
         for (auto &child : children) {
-            recur_weights(child, weights);
+            recur_weights(*child, weights);
         }
         return variance(weights);
     }
 
-    void Quadtree::recur_weights(Quadtree *root, std::vector<double> &weights) {
-        if ((root->children).size()) {
-            for (auto child : root->children) {
-                recur_weights(child, weights);
+    void Quadtree::recur_weights(Quadtree &root, std::vector<double> &weights) {
+        if ((root.children).size()) {
+            for (auto &child : root.children) {
+                recur_weights(*child, weights);
             }
         } else {
-            weights.push_back(root->weight);
+            weights.push_back(root.weight);
         }
     }
 

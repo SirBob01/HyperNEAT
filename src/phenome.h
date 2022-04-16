@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <cassert>
+#include <functional>
+#include <memory>
 #include <queue>
 #include <unordered_set>
 
@@ -52,14 +54,14 @@ namespace HyperNEAT {
          * Perform the division and initialization step of the evolving
          * substrate
          */
-        Quadtree *division_initialization(Point point, bool outgoing);
+        std::unique_ptr<Quadtree> divide_initialize(Point point, bool outgoing);
 
         /**
          * Perform the prune and extract algorithm of the evolving substrate
          */
         void
         prune_extract(Point point,
-                      Quadtree *quadtree,
+                      Quadtree &quadtree,
                       bool outgoing,
                       std::unordered_map<Edge, double, EdgeHash> &connections);
 
