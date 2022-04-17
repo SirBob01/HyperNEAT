@@ -355,32 +355,32 @@ namespace HyperNEAT {
         const auto &b_edges = other._edges;
 
         int N = std::max(a_edges.size(), b_edges.size());
-
-        std::vector<Edge> disjoint;
+        int disjoint = 0;
         for (auto &e : b_edges) {
             if (a_edges.count(e.first) == 0) {
-                disjoint.push_back(e.first);
+                disjoint++;
             }
         }
         for (auto &e : a_edges) {
             if (b_edges.count(e.first) == 0) {
-                disjoint.push_back(e.first);
+                disjoint++;
             }
         }
 
-        double t1 = static_cast<double>(disjoint.size()) / N;
+        double t1 = static_cast<double>(disjoint) / N;
         double t2 = 0;
 
-        int n = 0;
+        // For matching edges, calculate the average weight difference
+        int matching = 0;
         for (auto &e : a_edges) {
             if (b_edges.count(e.first)) {
                 double w_diff = b_edges.at(e.first).weight - e.second.weight;
                 t2 += std::fabs(w_diff);
-                n++;
+                matching++;
             }
         }
-        if (n) {
-            t2 /= n;
+        if (matching) {
+            t2 /= matching;
         }
         return t1 * _params.c1 + t2 * _params.c2;
     }
