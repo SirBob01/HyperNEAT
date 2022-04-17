@@ -2,6 +2,7 @@
 #define HYPER_NEAT_SPECIES_H_
 
 #include <algorithm>
+#include <memory>
 #include <queue>
 
 #include "genome.h"
@@ -14,7 +15,7 @@ namespace HyperNEAT {
      * pool
      */
     class Specie {
-        std::vector<Genome *> _members;
+        std::vector<std::unique_ptr<Genome>> _members;
         NEATParameters _params;
         int _stagnation_count;
 
@@ -24,7 +25,7 @@ namespace HyperNEAT {
       public:
         // Network parameters are going to propagated to all genomes
         Specie(Genome *representative, NEATParameters params);
-        ~Specie();
+        Specie(const Specie &other);
 
         /**
          * Add a new genome to the specie
@@ -39,12 +40,15 @@ namespace HyperNEAT {
         /**
          * Get the members of the species
          */
-        std::vector<Genome *> &get_members();
+        std::vector<std::unique_ptr<Genome>> &get_members();
 
         /**
-         * Adjust the fitness scores of each of its members
+         * Update the total average fitness of the specie for the current
+         * generation
+         *
+         * This will be used to determine whether to kill this specie
          */
-        void adjust_fitness();
+        void update_fitness();
 
         /**
          * Return the adjusted fitness sum
@@ -54,12 +58,12 @@ namespace HyperNEAT {
         /**
          * Get a random genome from this species
          */
-        Genome *sample();
+        Genome &sample();
 
         /**
          * Get the best genome in the species
          */
-        Genome *get_best();
+        Genome &get_best();
 
         /**
          * Cull the worst performing of the species

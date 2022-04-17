@@ -2,30 +2,38 @@
 
 namespace HyperNEAT {
     Specie::Specie(Genome *representative, NEATParameters params) {
-        _members.push_back(representative);
+        _members.push_back(std::unique_ptr<Genome>(representative));
         _params = params;
         _stagnation_count = 0;
     }
 
-    Specie::~Specie() {
-        for (auto &genome : _members) {
-            delete genome;
+    Specie::Specie(const Specie &other) {
+        for (auto &genome : other._members) {
+            _members.push_back(std::make_unique<Genome>(*genome));
         }
+
+        _params = other._params;
+        _stagnation_count = other._stagnation_count;
+
+        _fitness_sum = other._fitness_sum;
+        _fitness_history = other._fitness_history;
     }
 
-    void Specie::add(Genome *genome) { _members.push_back(genome); }
+    void Specie::add(Genome *genome) {
+        _members.push_back(std::unique_ptr<Genome>(genome));
+    }
 
     Genome &Specie::get_repr() { return *_members[0]; }
 
-    std::vector<Genome *> &Specie::get_members() { return _members; }
+    std::vector<std::unique_ptr<Genome>> &Specie::get_members() {
+        return _members;
+    }
 
-    void Specie::adjust_fitness() {
+    void Specie::update_fitness() {
         int n = _members.size();
         _fitness_sum = 0;
         for (auto &genome : _members) {
-            double fitness = genome->get_fitness();
-            genome->set_adjusted_fitness(fitness / _members.size());
-            _fitness_sum += genome->get_adjusted_fitness();
+            _fitness_sum += genome->get_fitness() / n;
         }
         _fitness_history.push(_fitness_sum);
         if (_fitness_history.size() > _params.max_stagnation) {
@@ -35,32 +43,29 @@ namespace HyperNEAT {
 
     double Specie::get_fitness_sum() { return _fitness_sum; }
 
-    Genome *Specie::sample() {
+    Genome &Specie::sample() {
         int index = randrange(0, _members.size());
-        return _members[index];
+        return *_members[index];
     }
 
-    Genome *Specie::get_best() {
-        Genome *best = _members[0];
+    Genome &Specie::get_best() {
+        Genome &best = *_members[0];
         for (auto &genome : _members) {
-            if (genome->get_fitness() > best->get_fitness()) {
-                best = genome;
+            if (genome->get_fitness() > best.get_fitness()) {
+                best = *genome;
             }
         }
         return best;
     }
 
     void Specie::cull() {
-        std::sort(_members.begin(), _members.end(), [](Genome *a, Genome *b) {
-            return a->get_fitness() > b->get_fitness();
-        });
-        int index = 1 + (1 - _params.cull_percent) * _members.size();
-        for (int i = index; i < _members.size(); i++) {
-            delete _members[i];
-        }
-        while (_members.size() > index) {
-            _members.pop_back();
-        }
+        std::sort(_members.begin(),
+                  _members.end(),
+                  [](const auto &a, const auto &b) {
+                      return a->get_fitness() > b->get_fitness();
+                  });
+        int new_size = 1 + (1 - _params.cull_percent) * _members.size();
+        _members.resize(new_size);
     }
 
     bool Specie::can_progress() {
@@ -68,6 +73,8 @@ namespace HyperNEAT {
         if (n < _params.max_stagnation) {
             return true;
         }
+
+        // Check if the overall average total fitness has improved over time
         double first = _fitness_history.front();
         double avg = 0;
         while (_fitness_history.size()) {

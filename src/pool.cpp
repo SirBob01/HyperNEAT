@@ -19,7 +19,7 @@ namespace HyperNEAT {
             }
         }
         generate_phenomes();
-        _global_best = new Genome(*(_species[0]->sample()));
+        _global_best = new Genome(_species[0]->sample());
     }
 
     Pool::Pool(std::string filename, NEATParameters params) {
@@ -89,117 +89,11 @@ namespace HyperNEAT {
         delete _global_best;
     }
 
-    double Pool::distance(Genome &a, Genome &b) {
-        std::unordered_map<Edge, EdgeGene, EdgeHash> a_edges = a.get_edges();
-        std::unordered_map<Edge, EdgeGene, EdgeHash> b_edges = b.get_edges();
-
-        int N = std::max(a_edges.size(), b_edges.size());
-
-        std::vector<Edge> disjoint;
-        for (auto &e : b_edges) {
-            if (a_edges.count(e.first) == 0) {
-                disjoint.push_back(e.first);
-            }
-        }
-        for (auto &e : a_edges) {
-            if (b_edges.count(e.first) == 0) {
-                disjoint.push_back(e.first);
-            }
-        }
-
-        double t1 = static_cast<double>(disjoint.size()) / N;
-        double t2 = 0;
-
-        int n = 0;
-        for (auto &e : a_edges) {
-            if (b_edges.count(e.first)) {
-                double w_diff = b_edges[e.first].weight - e.second.weight;
-                t2 += std::fabs(w_diff);
-                n++;
-            }
-        }
-        if (n) {
-            t2 /= n;
-        }
-        return t1 * _params.c1 + t2 * _params.c2;
-    }
-
-    Genome *Pool::crossover(Genome &a, Genome &b) {
-        auto a_edges = a.get_edges();
-        auto b_edges = b.get_edges();
-
-        auto a_nodes = a.get_nodes();
-        auto b_nodes = b.get_nodes();
-
-        // Calculate disjoint and matching edges
-        std::vector<Edge> matching;
-        std::vector<Edge> a_disjoint;
-        std::vector<Edge> b_disjoint;
-        for (auto &e : b_edges) {
-            if (a_edges.count(e.first) == 0) {
-                b_disjoint.push_back(e.first);
-            } else {
-                matching.push_back(e.first);
-            }
-        }
-        for (auto &e : a_edges) {
-            if (b_edges.count(e.first) == 0) {
-                a_disjoint.push_back(e.first);
-            }
-        }
-
-        std::unordered_map<Edge, EdgeGene, EdgeHash> child_edges;
-        std::vector<NodeGene> child_nodes;
-
-        // Inherit matching genes from random parents
-        for (auto &edge : matching) {
-            if (random() < 0.5) {
-                child_edges[edge] = a_edges[edge];
-            } else {
-                child_edges[edge] = b_edges[edge];
-            }
-            if (!a_edges[edge].enabled || !b_edges[edge].enabled) {
-                if (random() < _params.crossover_gene_disable_rate) {
-                    child_edges[edge].enabled = false;
-                } else {
-                    child_edges[edge].enabled = true;
-                }
-            }
-        }
-
-        // Inherit disjoint genes from fitter parent
-        if (a.get_fitness() > b.get_fitness()) {
-            for (auto &edge : a_disjoint) {
-                child_edges[edge] = a_edges[edge];
-            }
-        } else {
-            for (auto &edge : b_disjoint) {
-                child_edges[edge] = b_edges[edge];
-            }
-        }
-
-        // Inherit nodes from fitter parent
-        int max_node = 0;
-        for (auto &e : child_edges) {
-            max_node = std::max(max_node, e.first.from);
-            max_node = std::max(max_node, e.first.to);
-        }
-        for (int n = 0; n <= max_node; n++) {
-            if (a.get_fitness() > b.get_fitness()) {
-                child_nodes.push_back(a_nodes[n]);
-            } else {
-                child_nodes.push_back(b_nodes[n]);
-            }
-        }
-
-        return new Genome(child_nodes, child_edges, _params.genome_params);
-    }
-
     void Pool::add_genome(Genome *genome) {
         // Test if the new genome fits in an existing specie
         for (auto &specie : _species) {
             Genome &repr = specie->get_repr();
-            if (distance(repr, *genome) < _params.distance_threshold) {
+            if (repr.distance(*genome) < _params.distance_threshold) {
                 specie->add(genome);
                 return;
             }
@@ -234,7 +128,7 @@ namespace HyperNEAT {
                     _global_best = new Genome(*genome);
                 }
             }
-            _elites.push_back(new Genome(*(specie->get_best())));
+            _elites.push_back(new Genome(specie->get_best()));
         }
         _hall_of_fame.push_back(new Genome(*_global_best));
         if (_hall_of_fame.size() > _params.max_hall_of_fame) {
@@ -256,7 +150,7 @@ namespace HyperNEAT {
         for (auto &specie : _species) {
             // Delete stagnant species
             if (specie->can_progress()) {
-                specie->adjust_fitness();
+                specie->update_fitness();
                 specie->cull();
                 survivors.push_back(specie);
             } else {
@@ -286,7 +180,7 @@ namespace HyperNEAT {
                         genome = new Genome(*mom);
                         genome->mutate();
                     } else {
-                        genome = crossover(*mom, *dad);
+                        genome = new Genome(*mom, *dad);
                     }
                 } else {
                     genome = new Genome(_params.genome_params);
@@ -302,27 +196,27 @@ namespace HyperNEAT {
             Specie *specie = sample_specie();
 
             if (r < _params.crossover_probability) {
-                Genome *mom = specie->sample();
-                Genome *dad = specie->sample();
-                if (mom == dad) {
-                    child = new Genome(*mom);
+                Genome &mom = specie->sample();
+                Genome &dad = specie->sample();
+                if (&mom == &dad) {
+                    child = new Genome(mom);
                     child->mutate();
                 } else {
-                    child = crossover(*mom, *dad);
+                    child = new Genome(mom, dad);
                 }
             }
             cum_prob += _params.crossover_probability;
 
             if (r >= cum_prob && r < cum_prob + _params.mutation_probability) {
-                Genome *parent = specie->sample();
-                child = new Genome(*parent);
+                Genome &parent = specie->sample();
+                child = new Genome(parent);
                 child->mutate();
             }
             cum_prob += _params.mutation_probability;
 
             if (r >= cum_prob && r < cum_prob + _params.clone_probability) {
-                Genome *parent = specie->sample();
-                child = new Genome(*parent);
+                Genome &parent = specie->sample();
+                child = new Genome(parent);
             }
             cum_prob += _params.clone_probability;
             assert(std::fabs(1.0 - cum_prob) < 0.001);
@@ -461,7 +355,7 @@ namespace HyperNEAT {
 
     int Pool::get_generations() { return _generations; }
 
-    Phenome Pool::get_fittest() {
+    Phenome Pool::get_global_fittest() {
         return Phenome(*_global_best,
                        _inputs,
                        _outputs,
@@ -469,14 +363,14 @@ namespace HyperNEAT {
     }
 
     Phenome Pool::get_current_fittest() {
-        Genome *genome = _species[0]->get_best();
+        Genome &genome = _species[0]->get_best();
         for (auto &specie : _species) {
-            Genome *candidate = specie->get_best();
-            if (candidate->get_fitness() > genome->get_fitness()) {
+            Genome &candidate = specie->get_best();
+            if (candidate.get_fitness() > genome.get_fitness()) {
                 genome = candidate;
             }
         }
-        return Phenome(*genome, _inputs, _outputs, _params.phenome_params);
+        return Phenome(genome, _inputs, _outputs, _params.phenome_params);
     }
 
     std::vector<Phenome> Pool::get_hall_of_fame() {
@@ -523,7 +417,7 @@ namespace HyperNEAT {
             int genome_count = specie->get_members().size();
             outfile.write(reinterpret_cast<char *>(&genome_count), sizeof(int));
             for (auto &genome : specie->get_members()) {
-                write_genome(outfile, genome);
+                write_genome(outfile, genome.get());
             }
         }
 

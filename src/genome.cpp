@@ -17,7 +17,6 @@ namespace HyperNEAT {
 
         _params = params;
         _fitness = 0.0;
-        _adjusted_fitness = 0.0;
 
         // Initialize the CPPN with minimal topology
         // Weights are random and biases are zero-initialized
@@ -49,7 +48,6 @@ namespace HyperNEAT {
 
         _params = params;
         _fitness = 0.0;
-        _adjusted_fitness = 0.0;
 
         _nodes = nodes;
         _edges = edges;
@@ -64,7 +62,6 @@ namespace HyperNEAT {
 
         _params = genome._params;
         _fitness = genome._fitness;
-        _adjusted_fitness = genome._adjusted_fitness;
 
         _nodes = genome._nodes;
         _edges = genome._edges;
@@ -79,7 +76,6 @@ namespace HyperNEAT {
 
         _params = genome._params;
         _fitness = genome._fitness;
-        _adjusted_fitness = genome._adjusted_fitness;
 
         _nodes = genome._nodes;
         _edges = genome._edges;
@@ -87,6 +83,81 @@ namespace HyperNEAT {
         _adjacency = genome._adjacency;
         _sorted = genome._sorted;
         return *this;
+    }
+
+    Genome::Genome(const Genome &a, const Genome &b) {
+        _inputs = 4;
+        _outputs = 1;
+
+        _params = a._params;
+        _fitness = 0.0;
+
+        auto a_edges = a.get_edges();
+        auto b_edges = b.get_edges();
+
+        auto a_nodes = a.get_nodes();
+        auto b_nodes = b.get_nodes();
+
+        // Calculate disjoint and matching edges
+        std::vector<Edge> matching;
+        std::vector<Edge> a_disjoint;
+        std::vector<Edge> b_disjoint;
+        for (auto &e : b_edges) {
+            if (a_edges.count(e.first) == 0) {
+                b_disjoint.push_back(e.first);
+            } else {
+                matching.push_back(e.first);
+            }
+        }
+        for (auto &e : a_edges) {
+            if (b_edges.count(e.first) == 0) {
+                a_disjoint.push_back(e.first);
+            }
+        }
+
+        // Inherit matching genes from random parents
+        for (auto &edge : matching) {
+            if (random() < 0.5) {
+                _edges[edge] = a_edges[edge];
+            } else {
+                _edges[edge] = b_edges[edge];
+            }
+            if (!a_edges[edge].enabled || !b_edges[edge].enabled) {
+                if (random() < _params.crossover_gene_disable_rate) {
+                    _edges[edge].enabled = false;
+                } else {
+                    _edges[edge].enabled = true;
+                }
+            }
+        }
+
+        // Inherit disjoint genes from fitter parent
+        if (a.get_fitness() > b.get_fitness()) {
+            for (auto &edge : a_disjoint) {
+                _edges[edge] = a_edges[edge];
+            }
+        } else {
+            for (auto &edge : b_disjoint) {
+                _edges[edge] = b_edges[edge];
+            }
+        }
+
+        // Inherit nodes from fitter parent
+        int max_node = 0;
+        for (auto &e : _edges) {
+            max_node = std::max(max_node, e.first.from);
+            max_node = std::max(max_node, e.first.to);
+        }
+        for (int n = 0; n <= max_node; n++) {
+            if (a.get_fitness() > b.get_fitness()) {
+                _nodes.push_back(a_nodes[n]);
+            } else {
+                _nodes.push_back(b_nodes[n]);
+            }
+        }
+
+        // Generate network structure from inherited nodes and edges
+        update_structure();
     }
 
     void Genome::topological_sort(int node, std::unordered_set<int> &visited) {
@@ -272,19 +343,49 @@ namespace HyperNEAT {
         update_structure();
     }
 
-    const std::vector<NodeGene> &Genome::get_nodes() { return _nodes; }
+    const std::vector<NodeGene> &Genome::get_nodes() const { return _nodes; }
 
-    const std::unordered_map<Edge, EdgeGene, EdgeHash> &Genome::get_edges() {
+    const std::unordered_map<Edge, EdgeGene, EdgeHash> &
+    Genome::get_edges() const {
         return _edges;
     }
 
-    double Genome::get_fitness() { return _fitness; }
+    double Genome::distance(Genome &other) const {
+        const std::unordered_map<Edge, EdgeGene, EdgeHash> &a_edges = _edges;
+        std::unordered_map<Edge, EdgeGene, EdgeHash> &b_edges = other._edges;
+
+        int N = std::max(a_edges.size(), b_edges.size());
+
+        std::vector<Edge> disjoint;
+        for (auto &e : b_edges) {
+            if (a_edges.count(e.first) == 0) {
+                disjoint.push_back(e.first);
+            }
+        }
+        for (auto &e : a_edges) {
+            if (b_edges.count(e.first) == 0) {
+                disjoint.push_back(e.first);
+            }
+        }
+
+        double t1 = static_cast<double>(disjoint.size()) / N;
+        double t2 = 0;
+
+        int n = 0;
+        for (auto &e : a_edges) {
+            if (b_edges.count(e.first)) {
+                double w_diff = b_edges[e.first].weight - e.second.weight;
+                t2 += std::fabs(w_diff);
+                n++;
+            }
+        }
+        if (n) {
+            t2 /= n;
+        }
+        return t1 * _params.c1 + t2 * _params.c2;
+    }
+
+    double Genome::get_fitness() const { return _fitness; }
 
     void Genome::set_fitness(double fitness) { _fitness = fitness; }
-
-    double Genome::get_adjusted_fitness() { return _adjusted_fitness; }
-
-    void Genome::set_adjusted_fitness(double fitness) {
-        _adjusted_fitness = fitness;
-    }
 } // namespace HyperNEAT

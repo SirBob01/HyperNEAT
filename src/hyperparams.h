@@ -15,6 +15,10 @@ namespace HyperNEAT {
         double m_activation = 0.19;
 
         double mutation_power = 2.5;
+
+        double c1 = 2.0;
+        double c2 = 1.0;
+        double crossover_gene_disable_rate = 0.75;
     };
 
     struct PhenomeParameters {
@@ -37,20 +41,16 @@ namespace HyperNEAT {
      */
     struct NEATParameters {
         int population = 150;
-        int max_stagnation = 15;
+        int max_stagnation = 4;
         int max_hall_of_fame = 8;
 
         double crossover_probability = 0.2;
         double mutation_probability = 0.7;
         double clone_probability = 0.1;
 
-        double c1 = 2.0;
-        double c2 = 1.0;
-
         int target_species = 8;
         double distance_threshold = 1.0;
         double distance_threshold_delta = 0.1;
-        double crossover_gene_disable_rate = 0.75;
 
         double cull_percent = 0.8;
 

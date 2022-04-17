@@ -80,7 +80,6 @@ namespace HyperNEAT {
         int _outputs;
 
         double _fitness;
-        double _adjusted_fitness;
 
         /**
          * Topologically sort the nodes for feed-forward evaluation
@@ -155,6 +154,11 @@ namespace HyperNEAT {
         Genome &operator=(const Genome &genome);
 
         /**
+         * Construct a new genome as the offspring of two parents
+         */
+        Genome(const Genome &a, const Genome &b);
+
+        /**
          * Feed-forward algorithm
          */
         double forward(Point p0, Point p1);
@@ -167,32 +171,28 @@ namespace HyperNEAT {
         /**
          * Get the nodes of this network
          */
-        const std::vector<NodeGene> &get_nodes();
+        const std::vector<NodeGene> &get_nodes() const;
 
         /**
          * Get the edges of this network
          */
-        const std::unordered_map<Edge, EdgeGene, EdgeHash> &get_edges();
+        const std::unordered_map<Edge, EdgeGene, EdgeHash> &get_edges() const;
+
+        /**
+         * Calculate the distance to another genome by calculating the
+         * weighted sum of differences in their disjoint edges and weights
+         */
+        double distance(Genome &other) const;
 
         /**
          * Get the fitness score of this genome
          */
-        double get_fitness();
+        double get_fitness() const;
 
         /**
          * Set the fitness score of this genome
          */
         void set_fitness(double fitness);
-
-        /**
-         * Get the adjusted fitness score of this genome
-         */
-        double get_adjusted_fitness();
-
-        /**
-         * Set the adjusted fitness score of this genome
-         */
-        void set_adjusted_fitness(double fitness);
     };
 } // namespace HyperNEAT
 

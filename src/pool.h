@@ -34,16 +34,6 @@ namespace HyperNEAT {
         int _generations;
 
         /**
-         * Calculate the distance between genomes for speciation
-         */
-        double distance(Genome &a, Genome &b);
-
-        /**
-         * Perform sexual crossover between two genomes
-         */
-        Genome *crossover(Genome &a, Genome &b);
-
-        /**
          * Add a new genome to an existing species, or create a new
          * one if it is too genetically distinct
          */
@@ -105,7 +95,7 @@ namespace HyperNEAT {
         /**
          * Get the global fittest phenome
          */
-        Phenome get_fittest();
+        Phenome get_global_fittest();
 
         /**
          * Get the latest fittest phenome of the current generation

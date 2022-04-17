@@ -1,7 +1,7 @@
 #include <HyperNEAT.h>
 #include <vector>
 
-struct Case {
+struct TestCase {
     std::vector<double> input;
     std::vector<double> output;
 };
@@ -10,7 +10,7 @@ int main() {
     HyperNEAT::randseed();
 
     const int max_generations = 200;
-    const std::vector<Case> cases = {
+    const std::vector<TestCase> testcases = {
         {{0, 0}, {0}},
         {{1, 1}, {0}},
         {{1, 0}, {1}},
@@ -32,9 +32,9 @@ int main() {
 
         // Calculate the fitness of each network
         auto phenomes = pool.get_phenomes();
-        for (auto phenome : phenomes) {
+        for (auto &phenome : phenomes) {
             double total_error = 0.0;
-            for (auto &c : cases) {
+            for (auto &c : testcases) {
                 double result = phenome->forward(c.input)[0];
                 double diff = c.output[0] - result;
                 total_error += diff * diff;
@@ -42,10 +42,13 @@ int main() {
             phenome->set_fitness(1 / (1 + std::sqrt(total_error)));
         }
 
+        // Evolve the pool
+        pool.evolve();
+
         // Print the result of the fittest phenome
-        auto phenome = pool.get_fittest();
+        HyperNEAT::Phenome phenome = pool.get_global_fittest();
         double total_error = 0.0;
-        for (auto &c : cases) {
+        for (auto &c : testcases) {
             double result = phenome.forward(c.input)[0];
             double diff = c.output[0] - result;
             total_error += diff * diff;
@@ -53,9 +56,6 @@ int main() {
                       << "\n";
         }
         std::cout << "Accuracy " << 1 / (1 + std::sqrt(total_error)) << "\n\n";
-
-        // Evolve the pool
-        pool.evolve();
     }
     return 0;
 }
