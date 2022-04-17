@@ -92,11 +92,11 @@ namespace HyperNEAT {
         _params = a._params;
         _fitness = 0.0;
 
-        auto a_edges = a.get_edges();
-        auto b_edges = b.get_edges();
+        const auto &a_edges = a.get_edges();
+        const auto &b_edges = b.get_edges();
 
-        auto a_nodes = a.get_nodes();
-        auto b_nodes = b.get_nodes();
+        const auto &a_nodes = a.get_nodes();
+        const auto &b_nodes = b.get_nodes();
 
         // Calculate disjoint and matching edges
         std::vector<Edge> matching;
@@ -118,11 +118,11 @@ namespace HyperNEAT {
         // Inherit matching genes from random parents
         for (auto &edge : matching) {
             if (random() < 0.5) {
-                _edges[edge] = a_edges[edge];
+                _edges[edge] = a_edges.at(edge);
             } else {
-                _edges[edge] = b_edges[edge];
+                _edges[edge] = b_edges.at(edge);
             }
-            if (!a_edges[edge].enabled || !b_edges[edge].enabled) {
+            if (!a_edges.at(edge).enabled || !b_edges.at(edge).enabled) {
                 if (random() < _params.crossover_gene_disable_rate) {
                     _edges[edge].enabled = false;
                 } else {
@@ -134,11 +134,11 @@ namespace HyperNEAT {
         // Inherit disjoint genes from fitter parent
         if (a.get_fitness() > b.get_fitness()) {
             for (auto &edge : a_disjoint) {
-                _edges[edge] = a_edges[edge];
+                _edges[edge] = a_edges.at(edge);
             }
         } else {
             for (auto &edge : b_disjoint) {
-                _edges[edge] = b_edges[edge];
+                _edges[edge] = b_edges.at(edge);
             }
         }
 
@@ -350,9 +350,9 @@ namespace HyperNEAT {
         return _edges;
     }
 
-    double Genome::distance(Genome &other) const {
-        const std::unordered_map<Edge, EdgeGene, EdgeHash> &a_edges = _edges;
-        std::unordered_map<Edge, EdgeGene, EdgeHash> &b_edges = other._edges;
+    double Genome::distance(const Genome &other) const {
+        const auto &a_edges = _edges;
+        const auto &b_edges = other._edges;
 
         int N = std::max(a_edges.size(), b_edges.size());
 
@@ -374,7 +374,7 @@ namespace HyperNEAT {
         int n = 0;
         for (auto &e : a_edges) {
             if (b_edges.count(e.first)) {
-                double w_diff = b_edges[e.first].weight - e.second.weight;
+                double w_diff = b_edges.at(e.first).weight - e.second.weight;
                 t2 += std::fabs(w_diff);
                 n++;
             }
