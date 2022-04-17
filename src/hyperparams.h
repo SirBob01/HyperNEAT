@@ -42,7 +42,6 @@ namespace HyperNEAT {
     struct NEATParameters {
         int population = 150;
         int max_stagnation = 4;
-        int max_hall_of_fame = 8;
 
         double crossover_probability = 0.2;
         double mutation_probability = 0.7;
