@@ -11,7 +11,7 @@
 namespace HyperNEAT {
     /**
      * A container for genomes of similar topology and weights.
-     * These groups are evaluated independently to protect variation in the gene
+     * Species are evaluated independently to protect variation in the gene
      * pool
      */
     class Specie {
@@ -24,13 +24,13 @@ namespace HyperNEAT {
 
       public:
         // Network parameters are going to propagated to all genomes
-        Specie(Genome *representative, NEATParameters params);
+        Specie(std::unique_ptr<Genome> &&representative, NEATParameters params);
         Specie(const Specie &other);
 
         /**
          * Add a new genome to the specie
          */
-        void add(Genome *genome);
+        void add(std::unique_ptr<Genome> &&genome);
 
         /**
          * Get the representative genome of the specie for distance matching

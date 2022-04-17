@@ -1,8 +1,9 @@
 #include "species.h"
 
 namespace HyperNEAT {
-    Specie::Specie(Genome *representative, NEATParameters params) {
-        _members.push_back(std::unique_ptr<Genome>(representative));
+    Specie::Specie(std::unique_ptr<Genome> &&representative,
+                   NEATParameters params) {
+        _members.push_back(std::move(representative));
         _params = params;
         _stagnation_count = 0;
     }
@@ -19,8 +20,8 @@ namespace HyperNEAT {
         _fitness_history = other._fitness_history;
     }
 
-    void Specie::add(Genome *genome) {
-        _members.push_back(std::unique_ptr<Genome>(genome));
+    void Specie::add(std::unique_ptr<Genome> &&genome) {
+        _members.push_back(std::move(genome));
     }
 
     Genome &Specie::get_repr() { return *_members[0]; }

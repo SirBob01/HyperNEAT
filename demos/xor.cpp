@@ -31,19 +31,15 @@ int main() {
         std::cout << "Generation " << pool.get_generations() << "\n";
 
         // Calculate the fitness of each network
-        auto phenomes = pool.get_phenomes();
-        for (auto &phenome : phenomes) {
+        pool.evolve([&testcases](HyperNEAT::Phenome &phenome) {
             double total_error = 0.0;
             for (auto &c : testcases) {
-                double result = phenome->forward(c.input)[0];
+                double result = phenome.forward(c.input)[0];
                 double diff = c.output[0] - result;
                 total_error += diff * diff;
             }
-            phenome->set_fitness(1 / (1 + std::sqrt(total_error)));
-        }
-
-        // Evolve the pool
-        pool.evolve();
+            phenome.set_fitness(1 / (1 + std::sqrt(total_error)));
+        });
 
         // Print the result of the fittest phenome
         HyperNEAT::Phenome phenome = pool.get_global_fittest();

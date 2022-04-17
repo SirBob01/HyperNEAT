@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(.)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wfatal-errors")
 
 # HyperNEAT library files
 file(GLOB_RECURSE INCLUDE "./src/*.h")
