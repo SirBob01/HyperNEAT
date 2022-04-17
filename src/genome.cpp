@@ -259,7 +259,7 @@ namespace HyperNEAT {
             int to = _sorted[i];
             double sum = 0.0;
             for (int from : _adjacency[to]) {
-                EdgeGene gene = _edges[{from, to}];
+                EdgeGene &gene = _edges[{from, to}];
                 if (gene.enabled) {
                     sum += gene.weight * _nodes[from].activation;
                 }
