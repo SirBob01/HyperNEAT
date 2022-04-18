@@ -271,73 +271,65 @@ namespace HyperNEAT {
 
     void Genome::mutate() {
         bool error;
+        FunctionalDistribution dist = {
+            {_params.m_weight_shift,
+             [&]() {
+                 auto random_edge =
+                     std::next(std::begin(_edges), randrange(0, _edges.size()));
+                 error = !shift_weight(random_edge->first);
+             }},
+            {_params.m_weight_change,
+             [&]() {
+                 auto random_edge =
+                     std::next(std::begin(_edges), randrange(0, _edges.size()));
+                 error = !reset_weight(random_edge->first);
+             }},
+            {_params.m_bias_shift,
+             [&]() {
+                 int random_node = randrange(_inputs, _nodes.size());
+                 shift_bias(random_node);
+             }},
+            {_params.m_bias_change,
+             [&]() {
+                 int random_node = randrange(_inputs, _nodes.size());
+                 reset_bias(random_node);
+             }},
+            {_params.m_node,
+             [&]() {
+                 auto random_edge =
+                     std::next(std::begin(_edges), randrange(0, _edges.size()));
+                 add_node(random_edge->first);
+             }},
+            {_params.m_edge,
+             [&]() {
+                 // Generate random nodes (i, j) such that:
+                 // 1. i is not an output
+                 // 2. j is not an input
+                 // 3. i < j in the topological sort
+                 int n = _nodes.size();
+                 int i = randrange(0, n - _outputs);
+                 int j = randrange(std::max(_inputs, i + 1), n);
+                 error = !add_edge({_sorted[i], _sorted[j]});
+             }},
+            {_params.m_toggle_enable,
+             [&]() {
+                 auto random_edge =
+                     std::next(std::begin(_edges), randrange(0, _edges.size()));
+                 toggle_enable(random_edge->first);
+             }},
+            {_params.m_activation,
+             [&]() {
+                 int random_node = randrange(_inputs + _outputs, _nodes.size());
+                 if (random_node >= _nodes.size()) {
+                     error = true;
+                 } else {
+                     change_activation(random_node);
+                 }
+             }},
+        };
         do {
             error = false;
-            double r = random();
-
-            double cum_prob = 0;
-            if (r <= cum_prob + _params.m_weight_shift) {
-                auto random_edge =
-                    std::next(std::begin(_edges), randrange(0, _edges.size()));
-                error = !shift_weight(random_edge->first);
-            }
-            cum_prob += _params.m_weight_shift;
-
-            if (r > cum_prob && r <= cum_prob + _params.m_weight_change) {
-                auto random_edge =
-                    std::next(std::begin(_edges), randrange(0, _edges.size()));
-                error = !reset_weight(random_edge->first);
-            }
-            cum_prob += _params.m_weight_change;
-
-            if (r > cum_prob && r <= cum_prob + _params.m_bias_shift) {
-                int random_node = randrange(_inputs, _nodes.size());
-                shift_bias(random_node);
-            }
-            cum_prob += _params.m_bias_shift;
-
-            if (r > cum_prob && r <= cum_prob + _params.m_bias_change) {
-                int random_node = randrange(_inputs, _nodes.size());
-                reset_bias(random_node);
-            }
-            cum_prob += _params.m_bias_change;
-
-            if (r > cum_prob && r <= cum_prob + _params.m_node) {
-                auto random_edge =
-                    std::next(std::begin(_edges), randrange(0, _edges.size()));
-                add_node(random_edge->first);
-            }
-            cum_prob += _params.m_node;
-
-            if (r > cum_prob && r <= cum_prob + _params.m_edge) {
-                // Generate random nodes (i, j) such that:
-                // 1. i is not an output
-                // 2. j is not an input
-                // 3. i < j in the topological sort
-                int n = _nodes.size();
-                int i = randrange(0, n - _outputs);
-                int j = randrange(std::max(_inputs, i + 1), n);
-                error = !add_edge({_sorted[i], _sorted[j]});
-            }
-            cum_prob += _params.m_edge;
-
-            if (r > cum_prob && r <= cum_prob + _params.m_toggle_enable) {
-                auto random_edge =
-                    std::next(std::begin(_edges), randrange(0, _edges.size()));
-                toggle_enable(random_edge->first);
-            }
-            cum_prob += _params.m_toggle_enable;
-
-            if (r > cum_prob && r <= cum_prob + _params.m_activation) {
-                int random_node = randrange(_inputs + _outputs, _nodes.size());
-                if (random_node >= _nodes.size()) {
-                    error = true;
-                } else {
-                    change_activation(random_node);
-                }
-            }
-            cum_prob += _params.m_activation;
-            assert(cum_prob == 1);
+            probability_function(dist);
         } while (error);
 
         update_structure();
