@@ -388,7 +388,9 @@ namespace HyperNEAT {
         }
         t3 /= n_nodes;
 
-        return t1 * _params.c1 + t2 * _params.c2 + t3 * _params.c3;
+        return t1 * _params.distance_weights.disjoint_edge +
+               t2 * _params.distance_weights.edge_weight_difference +
+               t3 * _params.distance_weights.disjoint_activation;
     }
 
     double Genome::get_fitness() const { return _fitness; }

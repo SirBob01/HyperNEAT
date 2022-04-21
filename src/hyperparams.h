@@ -4,6 +4,12 @@
 #include "activations.h"
 
 namespace HyperNEAT {
+    struct DistanceWeightParameters {
+        double disjoint_edge = 2.0;
+        double edge_weight_difference = 1.5;
+        double disjoint_activation = 1.5;
+    };
+
     struct GenomeParameters {
         double m_weight_shift = 0.27;
         double m_weight_change = 0.03;
@@ -16,10 +22,9 @@ namespace HyperNEAT {
 
         double mutation_power = 2.5;
 
-        double c1 = 2.0;
-        double c2 = 1.0;
-        double c3 = 1.0;
         double crossover_gene_disable_rate = 0.75;
+
+        DistanceWeightParameters distance_weights;
     };
 
     struct PhenomeParameters {
