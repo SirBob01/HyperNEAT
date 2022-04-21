@@ -346,7 +346,10 @@ namespace HyperNEAT {
         const auto &a_edges = _edges;
         const auto &b_edges = other._edges;
 
-        int N = std::max(a_edges.size(), b_edges.size());
+        const auto &a_nodes = _nodes;
+        const auto &b_nodes = other._nodes;
+
+        int n_edges = std::max(a_edges.size(), b_edges.size());
         int disjoint = 0;
         for (auto &e : b_edges) {
             if (a_edges.count(e.first) == 0) {
@@ -359,8 +362,9 @@ namespace HyperNEAT {
             }
         }
 
-        double t1 = static_cast<double>(disjoint) / N;
+        double t1 = static_cast<double>(disjoint) / n_edges;
         double t2 = 0;
+        double t3 = 0;
 
         // For matching edges, calculate the average weight difference
         int matching = 0;
@@ -374,7 +378,17 @@ namespace HyperNEAT {
         if (matching) {
             t2 /= matching;
         }
-        return t1 * _params.c1 + t2 * _params.c2;
+
+        // For matching nodes, find the total mismatched activation functions
+        int n_nodes = std::min(a_nodes.size(), b_nodes.size());
+        for (int i = 0; i < n_nodes; i++) {
+            if (a_nodes[i].activation != b_nodes[i].activation) {
+                t3 += 1;
+            }
+        }
+        t3 /= n_nodes;
+
+        return t1 * _params.c1 + t2 * _params.c2 + t3 * _params.c3;
     }
 
     double Genome::get_fitness() const { return _fitness; }

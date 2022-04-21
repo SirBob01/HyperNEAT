@@ -110,6 +110,7 @@ namespace HyperNEAT {
     }
 
     void Pool::repopulate() {
+        // TODO: Refactor
         int size = 0;
         for (auto &specie : _species) {
             size += (specie->get_members()).size();
@@ -138,6 +139,9 @@ namespace HyperNEAT {
             }
             return;
         }
+
+        // TODO: Allocate genomes to species based on total adjusted fitness
+        // ratio The higher the total, the more genomes to add
         while (size < _params.population) {
             double r = random();
             double cum_prob = 0;

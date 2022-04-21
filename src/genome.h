@@ -180,7 +180,8 @@ namespace HyperNEAT {
 
         /**
          * Calculate the distance to another genome by calculating the
-         * weighted sum of differences in their disjoint edges and weights
+         * weighted sum of differences in their disjoint edges, activations, and
+         * weights
          */
         double distance(const Genome &other) const;
 

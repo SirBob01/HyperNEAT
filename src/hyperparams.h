@@ -18,6 +18,7 @@ namespace HyperNEAT {
 
         double c1 = 2.0;
         double c2 = 1.0;
+        double c3 = 1.0;
         double crossover_gene_disable_rate = 0.75;
     };
 
