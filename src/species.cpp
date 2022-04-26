@@ -6,6 +6,7 @@ namespace HyperNEAT {
         _members.push_back(std::move(representative));
         _params = params;
         _stagnation_count = 0;
+        _fitness_sum = 0;
     }
 
     Specie::Specie(const Specie &other) {

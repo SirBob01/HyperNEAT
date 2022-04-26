@@ -188,19 +188,16 @@ namespace HyperNEAT {
             return *_species[randrange(0, _species.size())];
         }
 
-        // Species with a higher adjusted fitness total are more likely to be
-        // picked
+        // Species with a higher adjusted fitness are more likely to be picked
         double cum_prob = 0;
-        int i = 0;
         for (auto &specie : _species) {
             double prob = specie->get_fitness_sum() / total;
-            i++;
             if (r >= cum_prob && r < cum_prob + prob) {
                 return *specie;
             }
             cum_prob += prob;
         }
-        return *_species[0];
+        return *_species[randrange(0, _species.size())];
     }
 
     std::unique_ptr<Genome> Pool::read_genome(std::ifstream &infile) {

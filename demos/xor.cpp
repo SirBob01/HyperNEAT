@@ -25,6 +25,7 @@ int main() {
     params.phenome_params.band_threshold = 0.1;
     params.phenome_params.initial_depth = 1;
     params.phenome_params.maximum_depth = 2;
+    params.max_stagnation = 1;
     HyperNEAT::Pool pool(input, output, params);
 
     for (int i = 0; i < max_generations; i++) {
@@ -51,7 +52,9 @@ int main() {
             std::cout << c.input[0] << " ^ " << c.input[1] << " = " << result
                       << "\n";
         }
-        std::cout << "Accuracy " << 1 / (1 + std::sqrt(total_error)) << "\n\n";
+
+        double accuracy = 1 / (1 + std::sqrt(total_error));
+        std::cout << "Accuracy " << accuracy << "\n\n";
     }
     return 0;
 }
