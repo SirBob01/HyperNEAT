@@ -59,6 +59,6 @@ namespace HyperNEAT {
             double d = v - mean;
             var += d * d;
         }
-        return var / n;
+        return var / (n - 1);
     }
 } // namespace HyperNEAT
