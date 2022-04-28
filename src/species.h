@@ -38,9 +38,14 @@ namespace HyperNEAT {
         Genome &get_repr();
 
         /**
+         * Get the number of members in this specie
+         */
+        int get_size();
+
+        /**
          * Get the members of the species
          */
-        std::vector<std::unique_ptr<Genome>> &get_members();
+        const std::vector<std::unique_ptr<Genome>> &get_members();
 
         /**
          * Update the total average fitness of the specie for the current

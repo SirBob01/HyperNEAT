@@ -44,15 +44,14 @@ namespace HyperNEAT {
         void cull();
 
         /**
+         * Create a genome using the elites and global best
+         */
+        std::unique_ptr<Genome> create_genome();
+
+        /**
          * Randomly breed new genomes via mutation or crossover
          */
         void repopulate();
-
-        /**
-         * Randomly select a specie whose likelihoods depend on adjusted fitness
-         * sum
-         */
-        Specie &sample_specie();
 
         /**
          * Read a genome from an input filestream

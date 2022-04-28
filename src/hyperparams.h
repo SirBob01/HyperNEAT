@@ -49,9 +49,8 @@ namespace HyperNEAT {
         int population = 150;
         int max_stagnation = 4;
 
-        double crossover_probability = 0.2;
+        double crossover_probability = 0.3;
         double mutation_probability = 0.7;
-        double clone_probability = 0.1;
 
         int target_species = 8;
         double distance_threshold = 1.0;

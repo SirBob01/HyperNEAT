@@ -109,95 +109,83 @@ namespace HyperNEAT {
         _species = std::move(survivors);
     }
 
-    void Pool::repopulate() {
-        // TODO: Refactor
-        int size = 0;
-        for (auto &specie : _species) {
-            size += (specie->get_members()).size();
+    std::unique_ptr<Genome> Pool::create_genome() {
+        double r = random();
+        std::unique_ptr<Genome> genome;
+        if (r < 0.5) {
+            // Global best
+            genome = std::make_unique<Genome>(*_global_best);
+            genome->mutate();
+        } else if (r < 0.75 && _elites.size() >= 2) {
+            // Elites
+            Genome &mom = *_elites[randrange(0, _elites.size())];
+            Genome &dad = *_elites[randrange(0, _elites.size())];
+            if (&mom == &dad) {
+                genome = std::make_unique<Genome>(mom);
+                genome->mutate();
+            } else {
+                genome = std::make_unique<Genome>(mom, dad);
+            }
+        } else {
+            // Minimal structure
+            genome = std::make_unique<Genome>(_params.genome_params);
         }
-        if (!_species.size()) {
-            // No specie survived; reset the population
-            for (int i = 0; i < _params.population; i++) {
-                double r = random();
-                std::unique_ptr<Genome> genome;
-                if (r < 0.5) {
-                    genome = std::make_unique<Genome>(*_global_best);
-                    genome->mutate();
-                } else if (r < 0.75 && _elites.size() >= 2) {
-                    Genome &mom = *_elites[randrange(0, _elites.size())];
-                    Genome &dad = *_elites[randrange(0, _elites.size())];
-                    if (&mom == &dad) {
-                        genome = std::make_unique<Genome>(mom);
-                        genome->mutate();
-                    } else {
-                        genome = std::make_unique<Genome>(mom, dad);
-                    }
-                } else {
-                    genome = std::make_unique<Genome>(_params.genome_params);
-                }
-                add_genome(std::move(genome));
-            }
-            return;
-        }
-
-        // TODO: Allocate genomes to species based on total adjusted fitness
-        // ratio The higher the total, the more genomes to add
-        while (size < _params.population) {
-            double r = random();
-            double cum_prob = 0;
-            Specie &specie = sample_specie();
-            std::unique_ptr<Genome> child;
-
-            if (r < _params.crossover_probability) {
-                Genome &mom = specie.sample();
-                Genome &dad = specie.sample();
-                if (&mom == &dad) {
-                    child = std::make_unique<Genome>(mom);
-                    child->mutate();
-                } else {
-                    child = std::make_unique<Genome>(mom, dad);
-                }
-            }
-            cum_prob += _params.crossover_probability;
-
-            if (r >= cum_prob && r < cum_prob + _params.mutation_probability) {
-                Genome &parent = specie.sample();
-                child = std::make_unique<Genome>(parent);
-                child->mutate();
-            }
-            cum_prob += _params.mutation_probability;
-
-            if (r >= cum_prob && r < cum_prob + _params.clone_probability) {
-                Genome &parent = specie.sample();
-                child = std::make_unique<Genome>(parent);
-            }
-            cum_prob += _params.clone_probability;
-            assert(std::fabs(1.0 - cum_prob) < 0.001);
-            add_genome(std::move(child));
-            size++;
-        }
+        return genome;
     }
 
-    Specie &Pool::sample_specie() {
-        double r = random();
-        double total = 0;
+    void Pool::repopulate() {
+        int current_population = 0;
+        double total_adjusted_fitness = 0;
         for (auto &specie : _species) {
-            total += specie->get_fitness_sum();
-        }
-        if (total == 0) {
-            return *_species[randrange(0, _species.size())];
+            current_population += specie->get_size();
+            total_adjusted_fitness += specie->get_fitness_sum();
         }
 
-        // Species with a higher adjusted fitness are more likely to be picked
-        double cum_prob = 0;
+        // Select species for genome breeding based on adjusted fitness sum
+        int target = _params.population - current_population;
+        std::vector<std::unique_ptr<Genome>> children;
         for (auto &specie : _species) {
-            double prob = specie->get_fitness_sum() / total;
-            if (r >= cum_prob && r < cum_prob + prob) {
-                return *specie;
+            double ratio = specie->get_fitness_sum() / total_adjusted_fitness;
+            int specie_quota = std::floor(target * ratio);
+
+            for (int i = 0; i < specie_quota; i++) {
+                std::unique_ptr<Genome> child;
+                FunctionalDistribution dist = {
+                    {_params.crossover_probability,
+                     [&]() {
+                         Genome &mom = specie->sample();
+                         Genome &dad = specie->sample();
+                         if (&mom == &dad) {
+                             child = std::make_unique<Genome>(mom);
+                             child->mutate();
+                         } else {
+                             child = std::make_unique<Genome>(mom, dad);
+                         }
+                     }},
+                    {_params.mutation_probability,
+                     [&]() {
+                         Genome &parent = specie->sample();
+                         child = std::make_unique<Genome>(parent);
+                         child->mutate();
+                     }},
+                };
+                probability_function(dist);
+                children.push_back(std::move(child));
+                current_population++;
             }
-            cum_prob += prob;
         }
-        return *_species[randrange(0, _species.size())];
+
+        // Populate leftover genomes
+        while (current_population < _params.population) {
+            children.push_back(create_genome());
+            current_population++;
+        }
+
+        // Respeciate
+        for (auto &child : children) {
+            add_genome(std::move(child));
+        }
+        assert(current_population == _params.population);
     }
 
     std::unique_ptr<Genome> Pool::read_genome(std::ifstream &infile) {
@@ -341,7 +329,7 @@ namespace HyperNEAT {
         int specie_count = _species.size();
         outfile.write(reinterpret_cast<char *>(&specie_count), sizeof(int));
         for (auto &specie : _species) {
-            int genome_count = specie->get_members().size();
+            int genome_count = specie->get_size();
             outfile.write(reinterpret_cast<char *>(&genome_count), sizeof(int));
             for (auto &genome : specie->get_members()) {
                 write_genome(outfile, *genome);

@@ -27,7 +27,9 @@ namespace HyperNEAT {
 
     Genome &Specie::get_repr() { return *_members[0]; }
 
-    std::vector<std::unique_ptr<Genome>> &Specie::get_members() {
+    int Specie::get_size() { return _members.size(); }
+
+    const std::vector<std::unique_ptr<Genome>> &Specie::get_members() {
         return _members;
     }
 
@@ -56,10 +58,8 @@ namespace HyperNEAT {
 
         double r = random();
         double cum_prob = 0;
-        int i = 0;
         for (auto &genome : _members) {
             double prob = genome->get_fitness() / total_fitness;
-            i++;
             if (r >= cum_prob && r < cum_prob + prob) {
                 return *genome;
             }
