@@ -56,7 +56,9 @@ namespace HyperNEAT {
         double get_fitness_sum();
 
         /**
-         * Get a random genome from this species
+         * Get a random genome from this specie.
+         *
+         * Genomes with a higher fitness score are more likely to be selected
          */
         Genome &sample();
 

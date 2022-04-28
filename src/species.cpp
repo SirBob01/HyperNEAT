@@ -46,8 +46,26 @@ namespace HyperNEAT {
     double Specie::get_fitness_sum() { return _fitness_sum; }
 
     Genome &Specie::sample() {
-        int index = randrange(0, _members.size());
-        return *_members[index];
+        double total_fitness = 0;
+        for (auto &genome : _members) {
+            total_fitness += genome->get_fitness();
+        }
+        if (total_fitness == 0) {
+            return *_members[randrange(0, _members.size())];
+        }
+
+        double r = random();
+        double cum_prob = 0;
+        int i = 0;
+        for (auto &genome : _members) {
+            double prob = genome->get_fitness() / total_fitness;
+            i++;
+            if (r >= cum_prob && r < cum_prob + prob) {
+                return *genome;
+            }
+            cum_prob += prob;
+        }
+        return *_members[0];
     }
 
     Genome &Specie::get_best() {
